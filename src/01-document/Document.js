@@ -1,72 +1,108 @@
 const sectionMap = require('./_sectionMap')
-const toMarkdown = require('./toMarkdown')
-const toReveal = require('./toReveal')
-const toHtml = require('./toHtml')
 const toJSON = require('./toJson')
-const toLatex = require('./toLatex')
+const disambig = require('./disambig')
 const setDefaults = require('../_lib/setDefaults')
-const aliasList = require('../_lib/aliases')
 const Image = require('../image/Image')
 
 const defaults = {
   tables: true,
   lists: true,
-  paragraphs: true
+  paragraphs: true,
 }
 
 //
-const Document = function(data, options) {
-  this.options = options || {}
+const Document = function (data) {
   Object.defineProperty(this, 'data', {
     enumerable: false,
-    value: data
+    value: data,
   })
 }
 
 const methods = {
-  title: function(str) {
+  title: function (str) {
     //use like a setter
     if (str !== undefined) {
       this.data.title = str
       return str
     }
-    //few places this could be stored..
-    if (this.data.title !== '') {
+    //if we have it already
+    if (this.data.title) {
       return this.data.title
     }
-    if (this.options.title) {
-      return this.options.title
-    }
-    let guess = null
     //guess the title of this page from first sentence bolding
+    let guess = null
     let sen = this.sentences(0)
     if (sen) {
       guess = sen.bolds(0)
     }
     return guess
   },
-  isRedirect: function() {
+  pageID: function (id) {
+    if (id !== undefined) {
+      this.data.pageID = id
+    }
+    return this.data.pageID
+  },
+  wikidata: function (id) {
+    if (id !== undefined) {
+      this.data.wikidata = id
+    }
+    return this.data.wikidata
+  },
+  domain: function (str) {
+    if (str !== undefined) {
+      this.data.domain = str
+    } else {
+      // console.log(this.data)
+    }
+    return this.data.domain
+  },
+  language: function (lang) {
+    if (lang !== undefined) {
+      this.data.lang = lang
+    }
+    return this.data.lang
+  },
+  url: function () {
+    let title = this.title()
+    if (!title) {
+      return null
+    }
+    let lang = this.language() || 'en'
+    let domain = this.domain() || 'wikipedia.org'
+    // replace blank to underscore
+    title = title.replace(/ /g, '_')
+    title = encodeURIComponent(title)
+    return `https://${lang}.${domain}/wiki/${title}`
+  },
+  namespace: function (ns) {
+    if (ns !== undefined) {
+      this.data.namespace = ns
+    }
+    return this.data.namespace
+  },
+  isRedirect: function () {
     return this.data.type === 'redirect'
   },
-  redirectTo: function() {
+  redirectTo: function () {
     return this.data.redirectTo
   },
-  isDisambiguation: function() {
-    return this.data.type === 'disambiguation'
+  isDisambiguation: function () {
+    return disambig(this)
   },
-  categories: function(clue) {
+  categories: function (clue) {
     if (typeof clue === 'number') {
       return this.data.categories[clue]
     }
     return this.data.categories || []
   },
-  sections: function(clue) {
+  sections: function (clue) {
     let arr = this.data.sections || []
-    arr.forEach(sec => (sec.doc = this))
+    arr.forEach((sec) => (sec.doc = this))
     //grab a specific section, by its title
     if (typeof clue === 'string') {
       let str = clue.toLowerCase().trim()
-      return arr.find(s => {
+      return arr.find((s) => {
         return s.title().toLowerCase() === str
       })
     }
@@ -75,9 +111,9 @@ const methods = {
     }
     return arr
   },
-  paragraphs: function(n) {
+  paragraphs: function (n) {
     let arr = []
-    this.data.sections.forEach(s => {
+    this.data.sections.forEach((s) => {
       arr = arr.concat(s.paragraphs())
     })
     if (typeof n === 'number') {
@@ -85,16 +121,16 @@ const methods = {
     }
     return arr
   },
-  paragraph: function(n) {
+  paragraph: function (n) {
     let arr = this.paragraphs() || []
     if (typeof n === 'number') {
       return arr[n]
     }
     return arr[0]
   },
-  sentences: function(n) {
+  sentences: function (n) {
     let arr = []
-    this.sections().forEach(sec => {
+    this.sections().forEach((sec) => {
       arr = arr.concat(sec.sentences())
     })
     if (typeof n === 'number') {
@@ -102,21 +138,26 @@ const methods = {
     }
     return arr
   },
-  images: function(clue) {
+  sentence: function () {
+    return this.sentences(0)
+  },
+  images: function (clue) {
     let arr = sectionMap(this, 'images', null)
     //grab image from infobox, first
-    this.infoboxes().forEach(info => {
+    this.infoboxes().forEach((info) => {
       let img = info.image()
       if (img) {
         arr.unshift(img) //put it at the top
       }
     })
     //look for 'gallery' templates, too
-    this.templates().forEach(obj => {
+    this.templates().forEach((obj) => {
       if (obj.template === 'gallery') {
         obj.images = obj.images || []
-        obj.images.forEach(img => {
+        obj.images.forEach((img) => {
           if (img instanceof Image === false) {
+            img.language = this.language()
+            img.domain = this.domain()
             img = new Image(img)
           }
           arr.push(img)
@@ -128,28 +169,31 @@ const methods = {
     }
     return arr
   },
-  links: function(clue) {
+  image: function () {
+    return this.images(0)
+  },
+  links: function (clue) {
     return sectionMap(this, 'links', clue)
   },
-  interwiki: function(clue) {
+  interwiki: function (clue) {
     return sectionMap(this, 'interwiki', clue)
   },
-  lists: function(clue) {
+  lists: function (clue) {
     return sectionMap(this, 'lists', clue)
   },
-  tables: function(clue) {
+  tables: function (clue) {
     return sectionMap(this, 'tables', clue)
   },
-  templates: function(clue) {
+  templates: function (clue) {
     return sectionMap(this, 'templates', clue)
   },
-  references: function(clue) {
+  references: function (clue) {
     return sectionMap(this, 'references', clue)
   },
-  coordinates: function(clue) {
+  coordinates: function (clue) {
     return sectionMap(this, 'coordinates', clue)
   },
-  infoboxes: function(clue) {
+  infoboxes: function (clue) {
     let arr = sectionMap(this, 'infoboxes')
     //sort them by biggest-first
     arr = arr.sort((a, b) => {
@@ -163,38 +207,22 @@ const methods = {
     }
     return arr
   },
-  text: function(options) {
+  text: function (options) {
     options = setDefaults(options, defaults)
     //nah, skip these.
     if (this.isRedirect() === true) {
       return ''
     }
-    let arr = this.sections().map(sec => sec.text(options))
+    let arr = this.sections().map((sec) => sec.text(options))
     return arr.join('\n\n')
   },
-  markdown: function(options) {
-    options = setDefaults(options, defaults)
-    return toMarkdown(this, options)
-  },
-  latex: function(options) {
-    options = setDefaults(options, defaults)
-    return toLatex(this, options)
-  },
-  html: function(options) {
-    options = setDefaults(options, defaults)
-    return toHtml(this, options)
-  },
-  reveal: function(options) {
-    options = setDefaults(options, defaults)
-    return toReveal(this, options)
-  },
-  json: function(options) {
+  json: function (options) {
     options = setDefaults(options, defaults)
     return toJSON(this, options)
   },
-  debug: function() {
+  debug: function () {
     console.log('\n')
-    this.sections().forEach(sec => {
+    this.sections().forEach((sec) => {
       let indent = ' - '
       for (let i = 0; i < sec.depth; i += 1) {
         indent = ' -' + indent
@@ -202,13 +230,12 @@ const methods = {
       console.log(indent + (sec.title() || '(Intro)'))
     })
     return this
-  }
+  },
 }
 
-//add alises
-Object.keys(aliasList).forEach(k => {
-  Document.prototype[k] = methods[aliasList[k]]
-})
+const isArray = function (arr) {
+  return Object.prototype.toString.call(arr) === '[object Array]'
+}
 //add singular-methods, too
 let plurals = [
   'sections',
@@ -218,24 +245,34 @@ let plurals = [
   'references',
   'coordinates',
   'tables',
+  'lists',
   'links',
   'images',
-  'categories'
+  'templates',
+  'categories',
 ]
-plurals.forEach(fn => {
+plurals.forEach((fn) => {
   let sing = fn.replace(/ies$/, 'y')
-  sing = sing.replace(/e?s$/, '')
-  methods[sing] = function(n) {
+  sing = sing.replace(/oxes$/, 'ox')
+  sing = sing.replace(/s$/, '')
+  methods[sing] = function (n) {
     n = n || 0
-    return this[fn](n)
+    let res = this[fn](n)
+    if (isArray(res)) {
+      return res[0]
+    }
+    return res
   }
 })
 
-Object.keys(methods).forEach(k => {
+Object.keys(methods).forEach((k) => {
   Document.prototype[k] = methods[k]
 })
 
 //alias these ones
+Document.prototype.lang = Document.prototype.language
+Document.prototype.ns = Document.prototype.namespace
+Document.prototype.plaintext = Document.prototype.text
 Document.prototype.isDisambig = Document.prototype.isDisambiguation
 Document.prototype.citations = Document.prototype.references
 Document.prototype.redirectsTo = Document.prototype.redirectTo

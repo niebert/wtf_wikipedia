@@ -1,22 +1,29 @@
-const wtf = require('./src/index')
-// const wtf = require('./builds/wtf_wikipedia.min')
-// const readFile = require('./tests/lib/_cachedPage');
-// const wtf = require('./builds/wtf_wikipedia');
-// const wtf = require('./build');
+var wtf = require('./src/index')
+wtf.extend(require('./plugins/wikitext/src'))
+// wtf.extend(require('./plugins/i18n/src'))
 
-// (async () => {
-// var doc = await wtf.fetch('महात्मा_गांधी', 'hi');
-// var doc = await wtf.random();
-// console.log(doc.text());
-// })();
+// var str = `[[Image:Levellers declaration and standard.gif|thumb|Woodcut from a [[Diggers]] document by [[William Everard (Digger)|William Everard]]]]`
+// console.log(wtf(str).json())
 
-// let doc = readFile('BBDO');
-// console.log(doc.infoboxes(0).data);
+// wtf.fetch('Quartz', 'en').then((doc) => {
+//   // console.log(doc.lang())
+//   console.log(doc.images().map((j) => j.url()))
+// })
 
-// wtf.fetch('Горбатая_гора', 'ru', function(err, doc) {
-//   console.log(doc.sections('Сюжет').sentences().map((s) => s.text()));
-// });
+let str = `{{Gallery
+|title=Cultural depictions of George Washington
+|width=160 | height=170
+|align=center
+|footer=Example 1
+|File:VeryCool.JPG
+|alt1=Statue facing a city building with Greek columns and huge U.S. flag
+}}`
 
-let str = `majority of [[music]], [[film]]s, [[book]]s`
-let doc = wtf(str)
-console.log(doc.links())
+let doc = wtf(str, { domain: 'cool.com' })
+console.log(doc.template())
+// console.log(doc.infobox().image().url())
+// console.log(doc.images().map((img) => img.url()))
+
+wtf.fetch('https://doom.fandom.com/wiki/Samuel_Hayden').then((doc) => {
+  console.log(doc.images().map((img) => img.url()))
+})

@@ -5,14 +5,13 @@ const defaults = {
   text: true,
   links: true,
   formatting: true,
-  dates: true,
-  numbers: true
+  numbers: true,
 }
 
-const toJSON = function(s, options) {
+const toJSON = function (s, options) {
   options = setDefaults(options, defaults)
   let data = {}
-  let text = s.plaintext()
+  let text = s.text()
   if (options.text === true) {
     data.text = text
   }
@@ -24,13 +23,10 @@ const toJSON = function(s, options) {
     }
   }
   if (options.links && s.links().length > 0) {
-    data.links = s.links()
+    data.links = s.links().map((l) => l.json())
   }
   if (options.formatting && s.data.fmt) {
     data.formatting = s.data.fmt
-  }
-  if (options.dates && s.data.dates !== undefined) {
-    data.dates = s.data.dates
   }
   return data
 }

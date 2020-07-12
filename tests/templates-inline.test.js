@@ -1,8 +1,7 @@
-'use strict'
 var wtf = require('./lib')
 var test = require('tape')
 
-test('inline-no-data', function(t) {
+test('inline-no-data', function (t) {
   var arr = [
     [`plural`, `{{plural|1.5|page}}`],
     [`hlist`, `{{hlist|Winner|Runner-up|Third place|item_style=color:blue;}}`],
@@ -17,7 +16,7 @@ test('inline-no-data', function(t) {
     [`date-none`, `{{date|4 August|none}}`],
     [`monthname`, `{{MONTHNAME|8}}`],
     [`dot`, `{{·}}`],
-    [`semicolon`, `{{;}}`],
+    // [`semicolon`, `{{;}}`],
     [`comma`, `{{,}}`],
     [`half`, `{{1/2}}`],
     [`fb`, `{{fb|Italy|1861}}`],
@@ -50,7 +49,7 @@ test('inline-no-data', function(t) {
 * Example 1
 * Example 2
 * Example 3
-}}`
+}}`,
     ],
     [`tooltip`, `{{Tooltip|G|Games played}}`],
     [`abbrlink`, `{{abbrlink|UK|United Kingdom}}`],
@@ -61,7 +60,7 @@ test('inline-no-data', function(t) {
  |label
  |link=yes/no (defaults to "no")
  |dotted=yes/no (defaults to "yes")
-}}`
+}}`,
     ],
     [`finedetail`, `{{finedetail |plain text|Is actually very very plain text}}`],
     ['mono', `{{Mono|text to format here}}`],
@@ -70,9 +69,9 @@ test('inline-no-data', function(t) {
     ['strongbad', `{{strongbad|1=important text}}`],
     ['!bxt', `{{!bxt|inline typeface change}}`],
     //['7 hello', '{{Unité|7}} hello'],//This test fails since I added "unité: parseCurrency," in index.js
-    ['nobr', '{{nobr}} nobr']
+    ['nobr', '{{nobr}} nobr'],
   ]
-  arr.forEach(a => {
+  arr.forEach((a) => {
     var doc = wtf(a[1])
     var len = doc.templates().length
     t.equal(len, 0, a[0] + ': unexpected templates count')
@@ -82,7 +81,7 @@ test('inline-no-data', function(t) {
   t.end()
 })
 
-test('inline-with-data', function(t) {
+test('inline-with-data', function (t) {
   var arr = [
     [`cad`, `{{CAD|123.45|link=yes}}`],
     [`gbp`, `{{GBP|123.45}}`],
@@ -108,19 +107,16 @@ test('inline-with-data', function(t) {
     [`birthdeathage`, `{{BirthDeathAge| |1976| | |1990| |}}`],
     [`death year and age`, `{{Death year and age|2017|1967|12}} `],
     [`death date and age`, `{{death date and age |1993|2|24 |1921|4|12 |mf=yes}}`],
-    [
-      `death-date and age`,
-      `{{Death-date and age| 30 May 1672 | 15 May 1623 | gregorian=9 June 1672 }}`
-    ],
+    [`death-date and age`, `{{Death-date and age| 30 May 1672 | 15 May 1623 | gregorian=9 June 1672 }}`],
     [`death date and given age`, `{{Death date and given age |1992|03|29 |30}}`],
     [`death year and age`, `{{Death year and age|2017|1967}} `],
     [`birth year and age`, `{{Birth year and age|1963|12}} `],
     [`winpct`, `{{winpct|1293|844|139}}`],
     [`mlbplayer`, `{{mlbplayer|93|Spencer Kelly}}`],
     ['samp', `{{samp|1=[A]bort, [R]etry, [F]ail?}}`],
-    ['infront 10000 écu behind', 'infront {{Monnaie|10000|écu}} behind']
+    ['infront 10000 écu behind', 'infront {{Monnaie|10000|écu}} behind'],
   ]
-  arr.forEach(a => {
+  arr.forEach((a) => {
     var doc = wtf(a[1])
     var len = doc.templates().length
     t.equal(len, 1, a[0] + ': unexpected templates count')
@@ -130,16 +126,13 @@ test('inline-with-data', function(t) {
   t.end()
 })
 
-test('inline-output', t => {
+test('inline-output', (t) => {
   var arr = [
     [`{{nobold| [[#Structure and name|↓]] }}`, `↓`],
     [`[[Salt]]{{•}} [[Pepper]]`, `Salt • Pepper`],
     [`[[Salt]]{{ndash}}[[Pepper]]`, `Salt–Pepper`],
     ['[[Salt]]{{\\}}[[Black pepper|Pepper]]', `Salt / Pepper`],
-    [
-      '[[Salt]]{{snds}}[[Black pepper|Pepper]]{{snds}}[[Curry]]{{snds}}[[Saffron]]',
-      `Salt – Pepper – Curry – Saffron`
-    ],
+    ['[[Salt]]{{snds}}[[Black pepper|Pepper]]{{snds}}[[Curry]]{{snds}}[[Saffron]]', `Salt – Pepper – Curry – Saffron`],
     ['[[Salt]]{{snd}}[[Saffron]]', `Salt – Saffron`],
     [`{{braces|Templatename|item1|item2}}`, `{{Templatename|item1|item2}}`],
     [`{{sic|Conc|encus}} can Change!`, `Concencus [sic] can Change!`],
@@ -156,26 +149,26 @@ test('inline-output', t => {
     [`hello {{Coord|44.112|-87.913|display=title}} world`, 'hello world'],
     [`{{Winning percentage|30|20|50}}`, `.550`],
     [`{{Winning percentage|30|20}}`, `.600`],
-    [`{{Winning percentage|30|20|50|ignore_ties=y}}`, `.300`]
+    [`{{Winning percentage|30|20|50|ignore_ties=y}}`, `.300`],
   ]
-  arr.forEach(a => {
+  arr.forEach((a) => {
     t.equal(wtf(a[0]).text(), a[1], a[0])
   })
   t.end()
 })
 
-test('flags', function(t) {
+test('flags', function (t) {
   var str = `one {{flag|USA}}, two {{flag|DEU|empire}}, three {{flag|CAN|name=Canadian}}.`
   var doc = wtf(str)
   t.equal(doc.links().length, 3, 'found 3 link')
-  t.equal(doc.links(1).text, 'DEU', 'link text')
-  t.equal(doc.links(1).page, 'Germany', 'link page')
+  t.equal(doc.links(1).text(), 'DEU', 'link text')
+  t.equal(doc.links(1).page(), 'germany', 'link page')
   t.equal(doc.text(), 'one 🇺🇸 USA, two 🇩🇪 DEU, three 🇨🇦 CAN.', 'made emoji flags')
   t.end()
 })
 
 //this example has it all!
-test('tricky-based-on', function(t) {
+test('tricky-based-on', function (t) {
   var str = `{{Based on|''[[Jurassic Park (novel)|Jurassic Park]]''|Michael Crichton}}`
   var doc = wtf(str)
   // t.equal(doc.links().length, 1, 'found link');

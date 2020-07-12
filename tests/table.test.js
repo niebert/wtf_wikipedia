@@ -1,4 +1,3 @@
-'use strict'
 var test = require('tape')
 var wtf = require('./lib')
 var readFile = require('./lib/_cachedPage')
@@ -33,11 +32,7 @@ test('rnli stations', t => {
 
   var lifeboat = doc.sections(2)
   t.equal(lifeboat.depth, 1, 'lifeboat-depth')
-  t.equal(
-    lifeboat.templates(0).list[0],
-    'Royal National Lifeboat Institution lifeboats',
-    'lifeboat-main'
-  )
+  t.equal(lifeboat.templates(0).list[0], 'Royal National Lifeboat Institution lifeboats', 'lifeboat-main')
   t.equal(lifeboat.lists(0).json().length, 3, 'lifeboat-list')
   t.equal(lifeboat.sentences().length, 3, 'lifeboat-sentences')
   t.deepEqual(lifeboat.images(), [], 'lifeboat-no-images')
@@ -459,22 +454,22 @@ test('two-header-rows-with-spans', t => {
 //nfl football table
 test('junky-table', t => {
   var str = `{| class="navbox plainrowheaders wikitable" style="width:100%"
-  ! A
-  ! B
-  ! C
-  ! D
-  |-
-  !style="{{Gridiron primary style|AFC}};" colspan="8"|[[American Football Conference|<span style="{{Gridiron secondary color|AFC}};">American Football Conference</span>]]
-  |-
-  !style=background:white rowspan="4"|[[AFC East|East]]
-  |'''[[Buffalo Bills]]'''
-  |[[Orchard Park (town), New York|Orchard Park, New York]]
-  |-
-  |'''[[Miami Dolphins]]'''
-  |[[Miami Gardens, Florida]]
-  |[[Hard Rock Stadium]]
-  |-
-  |}`
+! A
+! B
+! C
+! D
+|-
+!style="{{Gridiron primary style|AFC}};" colspan="8"|[[American Football Conference|<span style="{{Gridiron secondary color|AFC}};">American Football Conference</span>]]
+|-
+!style=background:white rowspan="4"|[[AFC East|East]]
+|'''[[Buffalo Bills]]'''
+|[[Orchard Park (town), New York|Orchard Park, New York]]
+|-
+|'''[[Miami Dolphins]]'''
+|[[Miami Gardens, Florida]]
+|[[Hard Rock Stadium]]
+|-
+|}`
   var table = wtf(str)
     .tables(0)
     .keyValue()
@@ -486,7 +481,7 @@ test('junky-table', t => {
   t.end()
 })
 
-test('table newlines', t => {
+test('table double bar', t => {
   var str = `{| class="wikitable"
 |-
 ! h1
@@ -514,5 +509,33 @@ test('table newlines', t => {
   t.equal(data[2].h1, 'c', 'h1')
   t.equal(data[2].h2, 'cc', 'h2')
   t.equal(data[2].h3, 'ccc', 'h3')
+  t.end()
+})
+
+//testing https://github.com/spencermountain/wtf_wikipedia/issues/332
+test('table newline', t => {
+  var str = `{| class="wikitable"
+|-
+! h1
+! h2
+! h3
+|-
+| a
+| b1<br />b2
+| c
+|-
+| a
+| b1
+b2
+| c
+|}`
+  var doc = wtf(str)
+  var data = doc.tables(0).keyValue()
+  t.equal(data[0].h1, 'a', 'h1')
+  t.equal(data[0].h2, 'b1 b2', 'h2')
+  t.equal(data[0].h3, 'c', 'h3')
+  t.equal(data[0].h1, 'a', 'h1')
+  t.equal(data[0].h2, 'b1 b2', 'h2')
+  t.equal(data[0].h3, 'c', 'h3')
   t.end()
 })

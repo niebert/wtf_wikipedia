@@ -35,8 +35,8 @@ const toReveal = function(doc, options) {
   options = setDefaults(options, defaults);
   let data = doc.data;
   let html = '';
-  //html += '<div class="reveal">\n';
-  //html += '  <div class="slides" id="divslides">\n';
+  html += '<div class="reveal">\n';
+  html += '  <div class="slides" id="divslides">\n';
   //add presentation title page
   if (options.title === true && data.title) {
     html += '   <section id="firstslide">\n'
@@ -50,8 +50,7 @@ const toReveal = function(doc, options) {
   //if it's a redirect page, give it a 'soft landing':
   if (doc.isRedirect() === true) {
     html += softRedirect(doc);
-    //return html + '\n  </div>\n</div>'; //end it here.
-    return html; //end it here.
+    return html + '\n  </div>\n</div>'; //end it here.
   }
   //render infoboxes (up at the top)
   if (options.infoboxes === true) {
@@ -59,7 +58,7 @@ const toReveal = function(doc, options) {
   }
   //render each section
   if (options.sections === true && (options.paragraphs === true || options.sentences === true)) {
-    html += data.sections.map(s => s.reveal(options)).join('\n');
+    html += data.sections.map(s => s.html(options)).join('\n');
   }
   //default off
   if (options.references === true) {
@@ -70,8 +69,8 @@ const toReveal = function(doc, options) {
     html += doc.references().map((c) => c.json(options)).join('\n');
     html += '   </section>\n';
   }
-  //html += '  </div>\n';
-  //html += '</div>';
+  html += '  </div>\n';
+  html += '</div>';
   return html;
 };
 module.exports = toReveal;

@@ -1,10 +1,11 @@
 const i18n = require('../_data/i18n')
 const Image = require('./Image')
-const parseTemplate = require('../templates/_parsers/parse')
-const parseSentence = require('../04-sentence').oneSentence
+const parseTemplate = require('../template/_parsers/parse')
+const parseSentence = require('../04-sentence').fromText
+const nested_find = require('./nested_find')
 //regexes:
-const isFile = new RegExp('(' + i18n.images.concat(i18n.files).join('|') + '):', 'i')
-let fileNames = `(${i18n.images.concat(i18n.files).join('|')})`
+const isFile = new RegExp('(' + i18n.images.join('|') + '):', 'i')
+let fileNames = `(${i18n.images.join('|')})`
 const file_reg = new RegExp(fileNames + ':(.+?)[\\||\\]]', 'iu')
 
 //style directives for Wikipedia:Extended_image_syntax
@@ -22,11 +23,11 @@ const imgLayouts = {
   baseline: true,
   middle: true,
   sub: true,
-  super: true
+  super: true,
 }
 
 //images are usually [[image:my_pic.jpg]]
-const oneImage = function(img) {
+const oneImage = function (img, doc) {
   let m = img.match(file_reg)
   if (m === null || !m[2]) {
     return null
@@ -39,7 +40,9 @@ const oneImage = function(img) {
   title = title.replace(/ /g, '_')
   if (title) {
     let obj = {
-      file: file
+      file: file,
+      lang: doc.lang,
+      domain: doc.domain,
     }
     //try to grab other metadata, too
     img = img.replace(/^\[\[/, '')
@@ -54,26 +57,29 @@ const oneImage = function(img) {
       obj.alt = imgData.alt
     }
     //remove 'thumb' and things
-    arr = arr.filter(str => imgLayouts.hasOwnProperty(str) === false)
+    arr = arr.filter((str) => imgLayouts.hasOwnProperty(str) === false)
     if (arr[arr.length - 1]) {
       obj.caption = parseSentence(arr[arr.length - 1])
     }
-    return new Image(obj, img)
+    return new Image(obj)
   }
   return null
 }
 
-const parseImages = function(matches, r, wiki) {
-  matches.forEach(function(s) {
+const parseImages = function (paragraph, doc) {
+  let wiki = paragraph.wiki
+  //parse+remove scary '[[ [[]] ]]' stuff
+  let matches = nested_find(wiki)
+  matches.forEach(function (s) {
     if (isFile.test(s) === true) {
-      r.images = r.images || []
-      let img = oneImage(s)
+      paragraph.images = paragraph.images || []
+      let img = oneImage(s, doc)
       if (img) {
-        r.images.push(img)
+        paragraph.images.push(img)
       }
       wiki = wiki.replace(s, '')
     }
   })
-  return wiki
+  paragraph.wiki = wiki
 }
 module.exports = parseImages

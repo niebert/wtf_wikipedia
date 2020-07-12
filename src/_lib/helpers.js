@@ -1,12 +1,9 @@
-var helpers = {
+module.exports = {
   capitalise: function(str) {
     if (str && typeof str === 'string') {
       return str.charAt(0).toUpperCase() + str.slice(1)
     }
     return ''
-  },
-  onlyUnique: function(value, index, self) {
-    return self.indexOf(value) === index
   },
   trim_whitespace: function(str) {
     if (str && typeof str === 'string') {
@@ -19,4 +16,3 @@ var helpers = {
     return ''
   }
 }
-module.exports = helpers

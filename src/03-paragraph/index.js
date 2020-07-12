@@ -1,36 +1,33 @@
 const Paragraph = require('./Paragraph')
-const find_recursive = require('../_lib/recursive_match')
-const parseSentences = require('../04-sentence').addSentences
+const parseSentences = require('../04-sentence').byParagraph
 
 const twoNewLines = /\r?\n\r?\n/
 const parse = {
   image: require('../image'),
-  list: require('./list')
+  list: require('../list'),
 }
 
-const parseParagraphs = function(wiki) {
-  let pList = wiki.split(twoNewLines)
+const parseParagraphs = function (section, doc) {
+  let wiki = section.wiki
+  let paragraphs = wiki.split(twoNewLines)
   //don't create empty paragraphs
-  pList = pList.filter(p => p && p.trim().length > 0)
-  pList = pList.map(str => {
-    let data = {
+  paragraphs = paragraphs.filter((p) => p && p.trim().length > 0)
+  paragraphs = paragraphs.map((str) => {
+    let paragraph = {
+      wiki: str,
       lists: [],
       sentences: [],
-      images: []
+      images: [],
     }
     //parse the lists
-    str = parse.list(str, data)
-    //parse+remove scary '[[ [[]] ]]' stuff
-    let matches = find_recursive('[', ']', str)
+    parse.list(paragraph)
     // parse images
-    str = parse.image(matches, data, str)
+    parse.image(paragraph, doc)
     //parse the sentences
-    parseSentences(str, data)
-    return new Paragraph(data)
+    parseSentences(paragraph)
+    return new Paragraph(paragraph)
   })
-  return {
-    paragraphs: pList,
-    wiki: wiki
-  }
+  section.wiki = wiki
+  section.paragraphs = paragraphs
 }
 module.exports = parseParagraphs

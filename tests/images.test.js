@@ -1,9 +1,8 @@
-'use strict'
 var test = require('tape')
 var wtf = require('./lib')
 var readFile = require('./lib/_cachedPage')
 
-test('gallery-tag', t => {
+test('gallery-tag', (t) => {
   var str = `
 hey cool!
 ==Paintings==
@@ -24,12 +23,12 @@ The paintings have the freedom and energy of  sketches, using warm and cool ligh
   var templ = doc.templates(0)
   t.deepEqual(templ.template, 'gallery', 'document-has-template')
   t.deepEqual(templ.images.length, 5, '5 images')
-  t.deepEqual(templ.images[0].caption.links(0).page, 'Freyja', 'image has caption')
+  t.deepEqual(templ.images[0].caption.links(0).page(), 'Freyja', 'image has caption')
   t.deepEqual(doc.images().length, 5, 'images() finds gallery')
   t.end()
 })
 
-test('gallery-tag-2', t => {
+test('gallery-tag-2', (t) => {
   var doc = wtf(`hello
 
   <gallery>
@@ -51,7 +50,7 @@ test('gallery-tag-2', t => {
   t.end()
 })
 
-test('gallery-template', t => {
+test('gallery-template', (t) => {
   var str = `{{Gallery|width=200 |lines=4
 |File:India1909PrevailingRaces.JPG|The map of the prevailing "races" of India (now discredited) based on the 1901 Census of British India. The Kurmi are shown both in the [[United Provinces of Agra and Oudh|United Provinces]] (UP) and the [[Central Provinces]].
 |File:Kurmi sowing.jpg|An "ethnographic" photograph from 1916 showing Kurmi farmers, both men and women, sowing a field.
@@ -64,30 +63,21 @@ test('gallery-template', t => {
   t.end()
 })
 
-test('from-infobox', t => {
+test('from-infobox', (t) => {
   let doc = readFile('jodie_emery')
   t.equal(
-    doc
-      .infobox(0)
-      .images(0)
-      .thumb(),
+    doc.infobox(0).images(0).thumb(),
     'https://wikipedia.org/wiki/Special:Redirect/file/Marc_Emery_and_Jodie_Emery.JPG?width=300',
     'has correct thumbnail'
   )
   t.end()
 })
 
-test('img-alt', t => {
+test('img-alt', (t) => {
   let str = `[[File:Wikipedesketch1.png|thumb|alt=A cartoon centipede detailed description.|The Wikipede edits ''[[Myriapoda]]''.]]`
-  let img = wtf(str)
-    .images(0)
-    .json()
+  let img = wtf(str).images(0).json()
   t.equal(img.file, 'File:Wikipedesketch1.png', 'file')
-  t.equal(
-    img.thumb,
-    'https://wikipedia.org/wiki/Special:Redirect/file/Wikipedesketch1.png?width=300',
-    'thumb'
-  )
+  t.equal(img.thumb, 'https://wikipedia.org/wiki/Special:Redirect/file/Wikipedesketch1.png?width=300', 'thumb')
   t.equal(img.url, 'https://wikipedia.org/wiki/Special:Redirect/file/Wikipedesketch1.png', 'image')
   t.equal(img.caption, 'The Wikipede edits Myriapoda.', 'caption')
   t.equal(img.alt, 'A cartoon centipede detailed description.', 'alt')
@@ -95,11 +85,9 @@ test('img-alt', t => {
   t.end()
 })
 
-test('parsed-captions', t => {
+test('parsed-captions', (t) => {
   let str = `[[File:Volkswagen W12.jpg|thumb|upright|[[Volkswagen Group]] W12 engine from the [[Volkswagen Phaeton|Volkswagen Phaeton W12]]]]`
-  let img = wtf(str)
-    .images(0)
-    .json()
+  let img = wtf(str).images(0).json()
   t.equal(img.caption, 'Volkswagen Group W12 engine from the Volkswagen Phaeton W12', 'caption')
   t.end()
 })

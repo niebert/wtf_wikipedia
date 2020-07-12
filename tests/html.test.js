@@ -1,116 +1,35 @@
-'use strict'
 var test = require('tape')
 var wtf = require('./lib')
-var tidy = require('./lib/tidy')
 
-test('basic-html', t => {
-  var have = wtf('that cat is [[a]] cool dude').html()
-  var want = `<!DOCTYPE html>
-<html>
-<head></head>
-<body>
-<div class="section">
-  <div class="text">
-    <p class="paragraph">
-      <span class="sentence">that cat is <a class="link" href="./A">a</a> cool dude</span>
-    </p>
-  </div>
-</div>
-</body>
-</html>
-`
-  t.equal(tidy.html(have), tidy.html(want), 'link')
+test('support bold and italics', (t) => {
+  let doc = wtf(`hi <b>world</b> there`)
+  t.equal(doc.text(), 'hi world there')
+  let obj = doc.sentence(0).json().formatting || {}
+  t.equal((obj.bold || [])[0], 'world', 'got bold')
 
-  //1 tick
-  have = wtf(`i 'think' so`).html()
-  want = `<!DOCTYPE html>
-<html>
-<head></head>
-<body>
-<div class="section">
-  <div class="text">
-    <p class="paragraph">
-      <span class="sentence">i 'think' so</span>
-    </p>
-  </div>
-</div>
-</body>
-</html>
-`
-  t.equal(tidy.html(have), tidy.html(want), 'link-blank')
+  doc = wtf(`hi <i>world</i> there`)
+  t.equal(doc.text(), 'hi world there')
+  obj = doc.sentence(0).json().formatting || {}
+  t.equal((obj.italic || [])[0], 'world', 'got italic')
 
-  //2 ticks
-  have = wtf(`i ''think'' so`).html()
-  want = `<!DOCTYPE html>
-<html>
-<head></head>
-<body>
-<div class="section">
-  <div class="text">
-    <p class="paragraph">
-      <span class="sentence">i <i>think</i> so</span>
-    </p>
-  </div>
-</div>
-</body>
-</html>
-`
-  t.equal(tidy.html(have), tidy.html(want), 'italic')
+  // both
+  doc = wtf(`hi <i><b>world</b></i> there`)
+  t.equal(doc.text(), 'hi world there')
+  obj = doc.sentence(0).json().formatting || {}
+  t.equal((obj.bold || [])[0], 'world', 'got bold')
+  t.equal((obj.italic || [])[0], 'world', 'got italic')
+  t.end()
+})
 
-  //3 ticks
-  have = wtf(`i '''think''' so`).html()
-  want = `<!DOCTYPE html>
-<html>
-<head></head>
-<body>
-<div class="section">
-  <div class="text">
-    <p class="paragraph">
-      <span class="sentence">i <b>think</b> so</span>
-    </p>
-  </div>
-</div>
-</body>
-</html>
-`
-  t.equal(tidy.html(have), tidy.html(want), '3-ticks')
+test('support sub and sup', (t) => {
+  let doc = wtf(`hi <sub>world</sub> there`)
+  t.equal(doc.text(), 'hi world there')
+  let tmpl = doc.templates(0) || {}
+  t.equal(tmpl.text, 'world', 'got sub template')
 
-  //4 ticks
-  have = wtf(`i ''''think'''' so`).html()
-  want = `<!DOCTYPE html>
-<html>
-<head></head>
-<body>
-<div class="section">
-  <div class="text">
-    <p class="paragraph">
-      <span class="sentence">i <b>'think'</b> so</span>
-    </p>
-  </div>
-</div>
-</body>
-</html>
-`
-  t.equal(tidy.html(have), tidy.html(want), '4 ticks')
-
-  //5 ticks
-  have = wtf(`i '''''think''''' so`).html()
-  want = `<!DOCTYPE html>
-<html>
-<head></head>
-<body>
-<div class="section">
-  <div class="text">
-    <p class="paragraph">
-      <span class="sentence">i <b><i>think</i></b> so</span>
-    </p>
-  </div>
-</div>
-</body>
-</html>
-`
-  t.equal(tidy.html(have), tidy.html(want), '5-ticks')
-
-  //-------------------
+  doc = wtf(`hi <sup>world</sup> there`)
+  t.equal(doc.text(), 'hi world there')
+  tmpl = doc.templates(0) || {}
+  t.equal(tmpl.text, 'world', 'got sup template')
   t.end()
 })
